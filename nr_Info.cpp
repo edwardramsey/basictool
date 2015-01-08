@@ -6,23 +6,18 @@ int32 NrInfo::WriteToFile(const char *szFileName, const char *szFileContent)
 	CAutoLock Lock(s_lock); 
 	if (NULL == szFileName || NULL == szFileContent) 
 	{
-		DBE2_LOG("null filename or null fileContent. ");
 		return -1;
 	}
 
 	FILE *fd = fopen(szFileName, "w");
 	if(!fd)
 	{
-		DBE2_LOG(WARN_LOGGER, "create file %s fail  errno %d strerr %s",
-								szFileName, errno, strerror(errno));
 		return -1;
 	}
 	
 	int32 iRet = fwrite(szFileContent, strlen(szFileContent), 1, fd);
 	if(1 != iRet)
 	{
-		DBE2_LOG(WARN_LOGGER, "write file %s fail  errno %d strerr %s",
-								szFileContent, errno, strerror(errno));
 		fclose(fd);
 		return -1;
 	}
@@ -40,8 +35,6 @@ int32 NrInfo::ReadNrRecord(
 	FILE* fd = fopen(filename.c_str(), "r");
 	if(!fd)
 	{
-		DBE2_LOG(WARN_LOGGER, "The file %s does not exist, errno %d strerr %s",
-								filename.c_str(), errno, strerror(errno));
 		return -1;
 	}
 
@@ -76,8 +69,6 @@ int32 NrInfo::ReadNrRecord(
 	FILE* fd = fopen(filename.c_str(), "r");
 	if(!fd)
 	{
-		DBE2_LOG(WARN_LOGGER, "The file %s does not exist, errno %d strerr %s",
-								filename.c_str(), errno, strerror(errno));
 		return -1;
 	}
 
@@ -125,14 +116,11 @@ int32 NrInfo::InitNrFile(NrProcKey& nrProcKey)
 	 || 0 == nrProcKey.m_iSrvId 
 	 || 0 == nrProcKey.m_iProcId)
 	{
-		DBE2_LOG(WARN_LOGGER, "unkown (%d-%d-%d), hold nr forbidden",
-					nrProcKey.m_iFlowId, nrProcKey.m_iSrvId, nrProcKey.m_iProcId);
 		return -1;
 	}
 
 	if(NULL == opendir(nrProcKey.g_rootPath.c_str()))
 	{
-		DBE2_LOG(WARN_LOGGER, "No this root path [%s]", nrProcKey.g_rootPath.c_str());
 		return -1;
 	}
 	
@@ -225,8 +213,6 @@ int32 NrInfo::ReadInfo(
 	int32 iRet = InitNrFile(nrProcKey);
 	if(0 != iRet)
 	{
-		DBE2_LOG(ERROR_LOGGER, "init nr[%d-%d-%d] file error", 
-						nrProcKey.m_iFlowId, nrProcKey.m_iSrvId, nrProcKey.m_iProcId);
 		return -1;
 	}
 
@@ -237,7 +223,6 @@ int32 NrInfo::ReadInfo(
 		iRet = ReadNrRecord(path, vecItemName, mapItemValue);	
 		if(0 != iRet)
 		{
-			DBE2_LOG(ERROR_LOGGER, "read Nr record failed");
 			return -1;
 		}
 	}
@@ -250,7 +235,6 @@ int32 NrInfo::ReadInfo(
 			iRet = ReadNrRecord(path, vecItemName, mapItemValue);	
 			if(0 != iRet)
 			{
-				DBE2_LOG(ERROR_LOGGER, "read Nr record failed");
 				return -1;
 			}	
 		}
@@ -268,8 +252,7 @@ int32 NrInfo::WriteInfo(
 	int32 iRet = InitNrFile(nrProcKey);
 	if(0 != iRet)
 	{
-		DBE2_LOG(ERROR_LOGGER, "init nr[%d-%d-%d] file error", 
-						nrProcKey.m_iFlowId, nrProcKey.m_iSrvId, nrProcKey.m_iProcId);
+		return -1;
 	}
 
 	if("" != fileName)
@@ -281,7 +264,6 @@ int32 NrInfo::WriteInfo(
 		iRet = ReadNrRecord(path, mapFileValue);	
 		if(0 != iRet)
 		{
-			DBE2_LOG(ERROR_LOGGER, "read Nr record failed");
 			return -1;
 		}
 
@@ -311,7 +293,6 @@ int32 NrInfo::WriteInfo(
 		iRet = WriteToFile(path.c_str(), strFileContent.c_str());
 		if(0 != iRet)
 		{
-			DBE2_LOG(ERROR_LOGGER, "write Item into file error.");
 			return -1;
 		}
 		

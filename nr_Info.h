@@ -1,7 +1,15 @@
 #include <iostream>
+#include "compile.h"
+#include "aistring.h"
+#include <map>
+#include <vector>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <pthread.h>
 
 #define STATUS_FILE "status"
 #define CAPABILITY_FILE	"capability"
@@ -14,6 +22,8 @@
 
 const static int32 FILE_PERMISSION = 0770;
 const static int32 DEFAULT_FILE_LEN = 1024;
+
+//static aistring g_rootPath = "~/ipc/nr";
 
 class locker  
 {  
@@ -67,7 +77,7 @@ private:
 
 private:
 	locker &m_lock;
-}
+};
 
 
 class NrProcKey
@@ -76,9 +86,13 @@ public:
 	int32 m_iFlowId;
 	int32 m_iSrvId;
 	int32 m_iProcId;
-}
 
-static aistring g_rootPath;
+	aistring g_rootPath;
+};
+
+static aistring nrFileType[] = {
+		STATUS_FILE, CAPABILITY_FILE, CMD_LINE_FILE, PID_FILE
+	};
 
 class NrInfo
 {
@@ -105,12 +119,6 @@ private:
 	NrInfo& operator=(const NrInfo&);
 
 public:
-	static aistring nrFileType[4] = {
-		STATUS_FILE, CAPABILITY_FILE, CMD_LINE_FILE, PID_FILE
-	}
-
-
-public:
 
 	/*
 	 * 读取文件中数据
@@ -118,7 +126,7 @@ public:
 	 * @param strItemValue 返回的数据值
 	 * @param filename 文件名称，默认为所有文件
 	 */
-	int32 ReadAllInfo(
+	/*int32 ReadAllInfo(
 			NrProcKey& nrProcKey,
 			AISTD map<aistring, aistring> mapItemValue);
 
@@ -127,7 +135,13 @@ public:
 			AISTD vector<aistring>& vecItemName,
 			AISTD vector<aistring>& vecItemValue,
 			char* filename
-			)
+			);*/
+	
+	int32 ReadInfo(
+			NrProcKey& nrProcKey,
+			AISTD vector<aistring>& vecItemName, 
+			AISTD map<aistring, aistring>& mapItemValue, 
+			const char* fileName);
 
 	/*
 	 * 写入数据
@@ -135,7 +149,7 @@ public:
 	int32 WriteInfo(
 			NrProcKey& nrProcKey,
 			AISTD map<aistring, aistring>& mapItemValue,
-			char* filename);
+			const char* filename);
 
 private:
 
@@ -153,6 +167,11 @@ private:
 			aistring& filename, 
 			AISTD map<aistring, aistring>& strItemValue);
 
+	int32 ReadNrRecord(
+		aistring& filename, 
+		AISTD vector<aistring>& vecItemName,
+		AISTD map<aistring, aistring>& mapItemValue);
+
 private:
 
 	static NrInfo* m_pInstance;
@@ -166,39 +185,6 @@ private:
 	AISTD map<aistring, aistring> m_MapNrRecord;
 
 	static locker s_lock;
-}
+};
 
 
-
-// class NrinfoItem
-// {
-// public:
-// 	static aistring strArrayCmdLine[]={
-// 		"start_proc_cmd",
-// 		"stop_proc_cmd",
-// 		"force_stop_proc_cmd",
-// 		"check_proc_cmd",
-// 		"restart_proc_cmd"
-// 	}
-//
-// 	static aistring strArrayCapability[]={
-// 		"iPid",
-// 		"dbCpuUse",
-// 		"dbMemUse",
-// 		"fNetUse",
-// 		"dbHandleRate",
-// 		"llUpdateTime",
-// 		"iSecModify"
-// 	}
-//
-// 	static aistring strArrayPid[]={
-// 		"iPid"
-// 	}
-//
-// 	static	aistring strArrayStatus[]={
-// 		"emProcStat",
-// 		"iCount",
-// 		"iSrcMsg",
-// 		"lluLastOperateTime"
-// 	}
-// }

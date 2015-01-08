@@ -41,7 +41,7 @@ int32 NrInfo::ReadNrRecord(
 	if(!fd)
 	{
 		DBE2_LOG(WARN_LOGGER, "The file %s does not exist, errno %d strerr %s",
-								rstrFile.c_str(), errno, strerror(errno));
+								filename.c_str(), errno, strerror(errno));
 		return -1;
 	}
 
@@ -68,7 +68,7 @@ int32 NrInfo::ReadNrRecord(
 
 int32 NrInfo::ReadNrRecord(
 	aistring& filename, 
-	AISTD vector<aistring> vecItemName,
+	AISTD vector<aistring>& vecItemName,
 	AISTD map<aistring, aistring>& mapItemValue)
 {
 	mapItemValue.clear();
@@ -77,7 +77,7 @@ int32 NrInfo::ReadNrRecord(
 	if(!fd)
 	{
 		DBE2_LOG(WARN_LOGGER, "The file %s does not exist, errno %d strerr %s",
-								rstrFile.c_str(), errno, strerror(errno));
+								filename.c_str(), errno, strerror(errno));
 		return -1;
 	}
 
@@ -91,7 +91,6 @@ int32 NrInfo::ReadNrRecord(
 			int32 pos = line.find(SEPARATOR);
 			
 			aistring key;
-			bool isfind = false;
 			if(pos != AISTD string::npos)
 			{
 				key = line.substr(0, pos);	
@@ -100,16 +99,13 @@ int32 NrInfo::ReadNrRecord(
 					if(key == vecItemName[i])
 					{
 						mapItemValue[key] = line.substr(pos+2);
-						infind = true;
+						if("\n" == line.substr(line.length()-1))
+						{
+							mapItemValue[key] = mapItemValue[key].substr(0, mapItemValue[key].length()-1);
+						}
 						break;
 					}
 				}
-			}
-
-			if(false == isfind)
-			{
-				DBE2_LOG(ERROR_LOGGER, "No Item [%s] in the file", key.c_str());
-				return -2;
 			}
 
 		}	
@@ -134,20 +130,22 @@ int32 NrInfo::InitNrFile(NrProcKey& nrProcKey)
 		return -1;
 	}
 
-	if(NULL == opendir(g_rootPath))
+	if(NULL == opendir(nrProcKey.g_rootPath.c_str()))
 	{
-		DBE2_LOG(WARN_LOGGER, "No this root path [%s]", g_rootPath.c_str());
+		DBE2_LOG(WARN_LOGGER, "No this root path [%s]", nrProcKey.g_rootPath.c_str());
 		return -1;
 	}
 	
-	m_strNrPath = snprintf("%s%d_%d_%d/", g_rootPath, 
+	char szText[1024] ={0};
+	snprintf(szText, sizeof(szText), "%s%d_%d_%d/", nrProcKey.g_rootPath.c_str(), 
 					nrProcKey.m_iFlowId, nrProcKey.m_iSrvId, nrProcKey.m_iProcId);
+	m_strNrPath = szText;
 
 	aistring strShellCmd = SHELL_INIT;
 	strShellCmd += m_strNrPath;
-	for(int32 i =0; i < nrFileType.size(); ++i)
+	for(int32 i =0; i < sizeof(nrFileType)/sizeof(aistring); ++i)
 	{
-		strShellCmd += " " + nrFileType;
+		strShellCmd += " " + nrFileType[i];
 	}
 	
 	strShellCmd += " 1>/dev/null 2>&1 &";
@@ -222,20 +220,21 @@ int32 NrInfo::ReadInfo(
 		NrProcKey& nrProcKey,
 		AISTD vector<aistring>& vecItemName, 
 		AISTD map<aistring, aistring>& mapItemValue, 
-		char* fileName)
+		const char* fileName)
 {
 	int32 iRet = InitNrFile(nrProcKey);
 	if(0 != iRet)
 	{
 		DBE2_LOG(ERROR_LOGGER, "init nr[%d-%d-%d] file error", 
 						nrProcKey.m_iFlowId, nrProcKey.m_iSrvId, nrProcKey.m_iProcId);
+		return -1;
 	}
 
 	aistring path = m_strNrPath + fileName;
 		
 	if("" != fileName)
 	{
-		iRet = ReadNrRecord(path.c_str(), vecItemName, mapItemValue);	
+		iRet = ReadNrRecord(path, vecItemName, mapItemValue);	
 		if(0 != iRet)
 		{
 			DBE2_LOG(ERROR_LOGGER, "read Nr record failed");
@@ -244,11 +243,11 @@ int32 NrInfo::ReadInfo(
 	}
 	else
 	{
-		for(int32 i = 0; i < nrFileType.size(); ++i)
+		for(int32 i = 0; i < sizeof(nrFileType)/sizeof(aistring); ++i)
 		{
 			aistring path = m_strNrPath + nrFileType[i];
 		
-			iRet = ReadNrRecord(path.c_str(), vecItemName, mapItemValue);	
+			iRet = ReadNrRecord(path, vecItemName, mapItemValue);	
 			if(0 != iRet)
 			{
 				DBE2_LOG(ERROR_LOGGER, "read Nr record failed");
@@ -264,7 +263,7 @@ int32 NrInfo::ReadInfo(
 int32 NrInfo::WriteInfo(
 		NrProcKey& nrProcKey,
 		AISTD map<aistring, aistring>& mapItemValue, 
-		char* fileName)
+		const char* fileName)
 {
 	int32 iRet = InitNrFile(nrProcKey);
 	if(0 != iRet)
@@ -279,7 +278,7 @@ int32 NrInfo::WriteInfo(
 		AISTD map<aistring, aistring> mapFileValue;	
 		aistring strFileContent;
 
-		iRet = ReadNrRecord(path.c_str(), mapFileValue);	
+		iRet = ReadNrRecord(path, mapFileValue);	
 		if(0 != iRet)
 		{
 			DBE2_LOG(ERROR_LOGGER, "read Nr record failed");
@@ -290,7 +289,7 @@ int32 NrInfo::WriteInfo(
 		for(it = mapItemValue.begin(); it != mapItemValue.end(); ++it)
 		{
 			AISTD map<aistring, aistring>::iterator itInFile;
-			itInFile = mapFileValue.find(*it);
+			itInFile = mapFileValue.find(it->first);
 			if(itInFile != mapFileValue.end())
 			{
 				itInFile->second = it->second;
@@ -303,46 +302,48 @@ int32 NrInfo::WriteInfo(
 
 		for(it = mapFileValue.begin(); it != mapFileValue.end(); ++it)
 		{
-			strFileContent += snprintf("%s%s%s\n", 
+			char szText[1024] ={0};
+			snprintf(szText, sizeof(szText), "%s%s%s\n", 
 					(it->first).c_str(), SEPARATOR, (it->second).c_str());
+			strFileContent += szText; 
+		}
+
+		iRet = WriteToFile(path.c_str(), strFileContent.c_str());
+		if(0 != iRet)
+		{
+			DBE2_LOG(ERROR_LOGGER, "write Item into file error.");
+			return -1;
 		}
 		
 	}
+
+	return iRet;
 
 }
 
 
 NrInfo* NrInfo::GetInstance()
 {
-	if(NULL == opendir(g_rootPath))
-	{
-		return NULL;
-	}
+
+	// if(NULL == opendir(g_rootPath.c_str()))
+	// {
+	// 	DBE2_LOG(ERROR_LOGGER, "root path error");
+	// 	return NULL;
+	// }
 
 	if(NULL == m_pInstance)
 	{
 		s_lock.lock();
 		if(NULL == m_pInstance)
 		{
-			static NrInfo sNrInfo();
-			m_pInstance = &sNrInfo;
+			// static NrInfo sNrInfo();
+			m_pInstance = new NrInfo;
 		}
 		s_lock.unlock();
 	}
 
 	return m_pInstance;
 }
-
-NrInfo::NrInfo()
-{
-		
-}
-
-NrInfo::~NrInfo()
-{
-	
-}
-
 
 
 

@@ -38,7 +38,7 @@ int32 NrInfo::ReadNrRecord(
 		return -1;
 	}
 
-	char szBuf[1024] = {0};
+	char szBuf[DEFAULT_FILE_LEN] = {0};
 
 	while(fgets(szBuf, sizeof(szBuf), fd) != NULL)
 	{
@@ -72,7 +72,7 @@ int32 NrInfo::ReadNrRecord(
 		return -1;
 	}
 
-	char szBuf[1024] = {0};
+	char szBuf[DEFAULT_FILE_LEN] = {0};
 
 	while(fgets(szBuf, sizeof(szBuf), fd) != NULL)
 	{
@@ -124,7 +124,7 @@ int32 NrInfo::InitNrFile(NrProcKey& nrProcKey)
 		return -1;
 	}
 	
-	char szText[1024] ={0};
+	char szText[DEFAULT_FILE_LEN] ={0};
 	snprintf(szText, sizeof(szText), "%s%d_%d_%d/", nrProcKey.g_rootPath.c_str(), 
 					nrProcKey.m_iFlowId, nrProcKey.m_iSrvId, nrProcKey.m_iProcId);
 	m_strNrPath = szText;
@@ -284,7 +284,7 @@ int32 NrInfo::WriteInfo(
 
 		for(it = mapFileValue.begin(); it != mapFileValue.end(); ++it)
 		{
-			char szText[1024] ={0};
+			char szText[DEFAULT_FILE_LEN] ={0};
 			snprintf(szText, sizeof(szText), "%s%s%s\n", 
 					(it->first).c_str(), SEPARATOR, (it->second).c_str());
 			strFileContent += szText; 

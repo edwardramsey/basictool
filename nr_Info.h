@@ -1,6 +1,6 @@
-#include <iostream>
-#include "compile.h"
-#include "aistring.h"
+#ifdef _NR_INFO_H
+#define _NR_INFO_H
+
 #include <map>
 #include <vector>
 #include <string.h>
@@ -11,20 +11,15 @@
 #include <dirent.h>
 #include <pthread.h>
 
-#define STATUS_FILE "status"
-#define CAPABILITY_FILE	"capability"
-#define CMD_LINE_FILE "cmd_line"
-#define PID_FILE "pid"
+#include "compile.h"
+#include "aistring.h"
 
-#define SEPARATOR ":="
+#include "ne_def.h"
 
-#define SHELL_INIT "./nrInit.sh "
 
-const static int32 FILE_PERMISSION = 0770;
-const static int32 DEFAULT_FILE_LEN = 1024;
-
-//static aistring g_rootPath = "~/ipc/nr";
-
+/*
+ * 锁
+ */
 class locker  
 {  
 public:  
@@ -51,6 +46,9 @@ private:
     pthread_mutex_t mutex;  
 };
 
+/*
+ * 配合locker使用
+ */
 class CAutoLock
 {
 public:
@@ -80,19 +78,21 @@ private:
 };
 
 
+/*
+ * 
+ */
 class NrProcKey
 {
 public:
+	// 
 	int32 m_iFlowId;
 	int32 m_iSrvId;
 	int32 m_iProcId;
 
+	// Nr文件的根目录
 	aistring g_rootPath;
 };
 
-static aistring nrFileType[] = {
-		STATUS_FILE, CAPABILITY_FILE, CMD_LINE_FILE, PID_FILE
-	};
 
 class NrInfo
 {
@@ -188,3 +188,5 @@ private:
 };
 
 
+
+#endif

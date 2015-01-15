@@ -10,20 +10,24 @@ List:
 ####Makefile Use Example
 Example File Architecture:
 
+```
 (include these two files)
 |--MakeMaster.mk
 |--MakeBasic.mk
 
 |--Makefile
-|--
+|--include
 `--subdir1
 	|--Makefile
+	|--build (*.o & *.d)
 	|--xx.h
 	|--xx.cpp
 `--subdir2
 	|--Makefile
+	|--build
 	|--xx.h
 	|--xx.cpp
+```
 
 Example Makefile in project root path	
 ```

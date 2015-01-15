@@ -5,3 +5,40 @@ List:
   2. readfileinfo tool
   3. 
 
+
+-------------
+####Makefile Use Example
+Example File Architecture:
+
+(include these two files)
+|--MakeMaster.mk
+|--MakeBasic.mk
+
+|--Makefile
+|--
+`--subdir1
+	|--Makefile
+	|--xx.h
+	|--xx.cpp
+`--subdir2
+	|--Makefile
+	|--xx.h
+	|--xx.cpp
+
+Example Makefile in project root path	
+```
+SUBDIRS=subdir1\
+		subdir2
+
+include $(YOUR_MAKE_PATH)/MakeMaster.mk
+```
+
+Example Makefile in Subdir
+```
+DEST_TYPE=BIN
+DEST = YOURNAME
+DEST_SOURCE=xx.cpp\
+			xxx.cpp ...
+
+include $(YOUR_MAKE_PATH)/MakeBasic.mk
+```

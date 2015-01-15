@@ -6,34 +6,51 @@
 # Date:	  2015.1.13 (version 0.1)
 # ========================================
 
-
 # .obj file
 OBJDIR=./build
 
-# The directory of project
-SRCDIRS=
+CFLAGS:= -O2 -Wall -MD $(foreach dir, $(INCLUDEDIR), -I$(dir)) 
 
-#The valid type of file
-SRCTYPE:=.c .cpp
-
-INCLUDEDIR=
-# -MD 生成.d来引入方便之后对.h的依赖
-CFLAGS:= -O2 -Wall -MD $(foreach dir, $(INCLUDEDIR), -I$(dir))
-
+# default cpp
 ifeq "$(DEST_SOURCE)" ""
-	SRCS= %.cpp %.c
+	SRCS= $(wildcard *.cpp) 
 else
 	SRCS=$(DEST_SOURCE)
 endif
 
+OBJS=$(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
 
-CC=g++
 
+CC = gcc
+CXX = g++
+
+###################################################
+# User Own Defination 
+
+# add user own CFLAGS
+USER_CFLAGS= #-g
+
+# output file path
 INSTALL_PATH=
 
-VPATH= 
+# add include file
+INCLUDEDIR=
 
-OBJS=$(patsubst %.cpp, $(OBJDIR)/%.o, $(SRCS))
+# add
+VPATH=
+
+# add use of ld
+LDFLAGS=
+
+# -MD 生成.d来引入方便之后对.h的依赖
+# CFLAGS_DEP:= -MD $(foreach dir, $(INCLUDEDIR), -I$(dir))
+
+# this will adjust the order of .a
+ifneq "$(LDFLAGS)" ""
+	XLDFLAGS = -Xlinker "-(" $(LDFLAGS) -Xlinker "-)"
+else
+	XLDFLAGS=
+endif
 
 ####################################################
 # deal output file name 
@@ -60,25 +77,28 @@ endif
 
 .PHONY: all install clean help
 
-all:$(OBJS)
-ifeq "FILE_TYPE" "BIN"
-	$(CC) $(OBJS) -shared -o $(TARGET) $(CFLAGS)	
+all : $(OBJS)
+ifeq "$(FILE_TYPE)" "BIN"
+	$(CXX) $(OBJS) -shared -fPIC -o $(TARGET) $(CFLAGS) $(XLDFLAGS) 
 endif
 
-ifeq "FILE_TYPE" "LIB"
-
+ifeq "$(FILE_TYPE)" "LIB"
+	ar rc $(TARGET) $(OBJS)
 endif
 
-ifeq "FILE_TYPE" "APP"
-
+ifeq "$(FILE_TYPE)" "APP"
+	$(CXX) $(OBJS) -o $(TARGET) $(CFLAGS) $(XLDFLAGS)
 endif
-	$(CC)	
 
 
+$(OBJDIR)/%.o : %.cpp
+	@[ ! -d $(OBJDIR) ] & mkdir -p $(OBJDIR)
+	$(CXX) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
 
-$(OBJECTDIR)%.o: $(SRCDIR)%.c
+$(OBJDIR)/%.o: %.c
 	@[ ! -d $(OBJDIR) ] & mkdir -p $(OBJDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
+
 
 install:
 	all
@@ -94,9 +114,8 @@ help:
 	@echo '========================================'
 	@echo '      Generic Makefile for C/C++        '
 	@echo '========================================'
-	@echo 'PROGRAM:     ' $(PROGRAM)
-	@echo 'CC:          ' $(CC)
-	@echo ''
+	@echo 'CC & CXX:          ' $(CC) $(CXX)
+	@echo 'link '				$(CXX) $(CPPFLAGS) $(CFLAGS)
 	
 	@echo 'all:     compile and link'
 	@echo 'clean:   clean objects and executable fule'

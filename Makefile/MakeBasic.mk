@@ -103,7 +103,7 @@ $(OBJDIR)/%.o: %.c
 install:
 	all
 ifeq "$(INSTALL_PATH)" ""
-	mv $(TARGET) $(INSTALL_PATH)$(TARGET)
+	cp -rf $(TARGET) $(INSTALL_PATH)$(TARGET)
 endif
 
 clean:

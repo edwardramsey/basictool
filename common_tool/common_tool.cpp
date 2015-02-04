@@ -1,7 +1,18 @@
-/*************************************************************
-    > File Name: common_tool.cpp
-    > Author: Edward
-    > Mail: chenyq6@asiainfo.com 
-    > Created Time: 一  2/ 2 20:14:03 2015
- ****************************************************/
+#include "common_tool.h"
 
+
+std::string FormatString(const char * format, ...)
+{
+    char buf[4096];
+   	std::string strRet;
+    if ( format != 0 )
+    {
+        va_list args;
+        va_start(args, format);
+        vsnprintf(buf, sizeof(buf), format, args);
+        buf[sizeof(buf) - 1] = 0;
+        va_end(args);
+        strRet = buf;
+    }
+    return strRet;
+}

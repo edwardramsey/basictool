@@ -47,7 +47,7 @@ DEST_SOURCE=xx.cpp\
 include $(YOUR_MAKE_PATH)/MakeBasic.mk
 ```
 
-# Second Makefile for many subfiles in `./src` 
+Second Makefile for many subfiles in `./src` 
 
 MakeMultSrc.mk
 
